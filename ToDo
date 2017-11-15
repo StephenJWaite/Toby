@@ -1,0 +1,7 @@
+-> Use KDtrees or something to calculate nearest neighbour between a point cloud and the closed contour
+
+-> Make a objective function for minimising above distances to match closed contour to point cloud
+
+-> Calculate bending energy
+
+-> Get PhD
