@@ -12,6 +12,9 @@ h10=t^3 - 2*t^2 + t;
 h01=-2*t^3 + 3*t^2;
 h11=t^3-t^2;
 
+global elemPoints 
+global testCoords
+global ns
 %For continious splines, the value of m1 at t_k must equalt m0 at t_k+1
 %there are a number of schemes for determining the value of gradients to 
 %match the data, we will start with the finite difference method
@@ -51,7 +54,7 @@ elem2=[3,2,1,-2;0,-6,-1,0];
 
 
 %now calculate p1x, p1y,p2x, p2y
-numP=1000;
+numP=30;
 tInt=linspace(0,1,numP);
 [x1,y1,xd1,yd1]=plotElem(elem1,numP);
 [x2,y2,xd2,yd2]=plotElem(elem2,numP);
@@ -96,9 +99,53 @@ plot([0,1],[yd1(1),yd2(1)],'or')
 
 figure(4)
 hold on
-plot([x1,x2],[y1,y2])
+plot([x1,x2],[y1,y2],'xb')
 plot([x1(1),x1(end),x2(1),x2(end)],[y1(1),y1(end),y2(1),y2(end)],'or')
 axis('equal')
+sP=[x1,x2;y1,y2]';
+
+%Now we are going to spoof some fake data to try and match
+testElem1=[2,3,2,1;8,0,0,-1];
+testElem2=[3,2,1,-2;0,-8,-1,0];
+testNumP=60;
+tInt=linspace(0,1,testNumP);
+[tx1,ty1,~,~]=plotElem(testElem1,testNumP);
+[tx2,ty2,~,~]=plotElem(testElem2,testNumP);
+testCoords=[tx1,tx2;ty1,ty2]';
+plot(testCoords(:,1),testCoords(:,2),'.k')
+
+%Set up a KD tree of the testCoords
+ns=createns(testCoords,'nsmethod','kdtree');
+[idx,dist]=knnsearch(ns,sP,'k',1);
+for i=1:length(sP)
+    plot([sP(i,1),testCoords(idx(i),1)],[sP(i,2),testCoords(idx(i),2)],'-g')
+end
+
+%now lets try fit a function, we need the points to be global
+
+%elem1=[2,3,2,1;6,0,0,-1];
+%elem2=[3,2,1,-2;0,-6,-1,0];
+elemPoints=[2,2;3,1;2,-2];
+mInit=[6,0,-6;0,-1,0]; %in the form mx;my
+
+%lets test the min function
+testR=minFunction(mInit);
+
+[mOut,fval,exitflag]=fminunc('minFunction',mInit);
+
+%lets check the result
+elem1=[elemPoints(1,1),elemPoints(2,1),elemPoints(1,2),elemPoints(2,2);
+       mOut(1,1),mOut(1,2),mOut(2,1),mOut(2,2)];
+elem2=[elemPoints(2,1),elemPoints(3,1),elemPoints(2,2),elemPoints(3,2);
+       mOut(1,2),mOut(1,3),mOut(2,2),mOut(2,3)];
+   
+[x1,y1,~,~]=plotElem(elem1,1000);
+[x2,y2,~,~]=plotElem(elem2,1000);
+points=[x1,x2;y1,y2]';
+plot(points(:,1),points(:,2),'-c')
+   
+
+
 
 
 
